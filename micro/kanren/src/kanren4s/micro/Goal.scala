@@ -7,6 +7,9 @@ import kanren4s.micro.Term.Variable
 
 sealed trait Goal extends Product with Serializable { self =>
   import Goal._
+
+  def and(that: Goal): Goal = Conj(self, that)
+
   def evaluate(debug: Boolean = false): Stream =
     Goal.evaluate(self, State.empty, debug)
 
@@ -47,9 +50,11 @@ object Goal {
   def extend(v: Var, t: Term, s: State): State =
     s.copy(substitution = s.substitution + (v -> t))
 
+  def evaluate(goal: Goal): Stream = evaluate(goal, State.empty, false)
+
   private[kanren4s] def evaluate(
       goal: Goal,
-      state: State,
+      state: State = State.empty,
       debug: Boolean = false
   ): Stream = {
     if (debug) {
