@@ -1,10 +1,10 @@
 package kanren4s.micro
 
 final case class State private[kanren4s] (
-    substitution: Map[Variable, Term],
-    variableCounter: Variable
+    substitution: Map[Var, Term],
+    variableCounter: Var
 )
 
 object State {
-  def empty: State = State(Map.empty, Variable(0))
+  def empty: State = State(Map.empty, Var(0))
 }

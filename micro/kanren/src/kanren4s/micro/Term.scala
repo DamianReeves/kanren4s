@@ -1,5 +1,5 @@
 package kanren4s.micro
-import kanren4s.micro.{Variable => VariableCount}
+import kanren4s.micro.{Var => VariableCount}
 
 sealed trait Term extends Product with Serializable { self =>
   import Term._

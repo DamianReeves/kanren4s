@@ -13,7 +13,7 @@ sealed trait Goal extends Product with Serializable { self =>
       if (variableCount > 4)
         "<exists x: ...>"
       else
-        s"exists x$variableCount: (${get(Variable(variableCount)).toString(variableCount + 1)})"
+        s"exists x$variableCount: (${get(Var(variableCount)).toString(variableCount + 1)})"
     case Delay(g) => s"delayed (${g().toString(variableCount)})"
   }
 
@@ -23,6 +23,6 @@ object Goal {
   private final case class Equiv(a: Term, b: Term) extends Goal
   private final case class Disj(g1: Goal, g2: Goal) extends Goal
   private final case class Conj(g1: Goal, g2: Goal) extends Goal
-  private final case class Fresh(get: Variable => Goal) extends Goal
+  private final case class Fresh(get: Var => Goal) extends Goal
   private final case class Delay(g: () => Goal) extends Goal
 }
