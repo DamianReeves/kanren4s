@@ -63,7 +63,8 @@ object Stream {
   def toList(s: Stream): List[Map[Var, Term]] = s.toList
   def union(s1: Stream, s2: Stream): Stream = s1.union(s2)
 
-  private case object Empty extends Stream
-  private final case class Procedure(f: () => Stream) extends Stream
-  private final case class Nonempty(head: State, tail: Stream) extends Stream
+  private[kanren4s] case object Empty extends Stream
+  private[kanren4s] final case class Procedure(f: () => Stream) extends Stream
+  private[kanren4s] final case class Nonempty(head: State, tail: Stream)
+      extends Stream
 }
