@@ -25,13 +25,9 @@ sealed trait Goal extends Product with Serializable { self =>
   override def toString(): String = self.toString(0)
 }
 object Goal {
-  val always: Goal = equiv(
-    Term.Symbol("_always", List.empty),
-    Term.Symbol("_always", List.empty)
-  )
+  val always: Goal = equiv(Term.LValue("_always"), Term.LValue("_always"))
 
-  val never: Goal =
-    equiv(Term.Symbol("_never", List.empty), Term.Symbol("_never2", List.empty))
+  val never: Goal = equiv(Term.LValue("_never"), Term.LValue("_never2"))
 
   def all(goals: List[Goal]): Goal = goals match {
     case Nil           => always
@@ -63,7 +59,12 @@ object Goal {
     }
     goal match {
 
-      case Equiv(t1, t2) => ???
+      case Equiv(t1, t2) =>
+        unify(t1, t2, state) match {
+          case None => Stream.empty
+          case Some(s) =>
+            Stream.Nonempty(s, Stream.empty)
+        }
       case Disj(a, b) =>
         Stream.union(evaluate(a, state, debug), evaluate(b, state, debug))
       case Conj(g1, g2) =>
@@ -81,11 +82,15 @@ object Goal {
 
     (u, v) match {
       case (Term.Variable(u), Term.Variable(v)) if u == v => Some(s)
-      case (Term.Variable(u), _) => Some(extend(u, v, s))
-      case (_, Variable(v))      => Some(extend(v, u, s))
-      case (u @ Term.Symbol(name1, args1), v @ Term.Symbol(name2, args2)) =>
-        ???
-      case _ => ???
+      case (Term.Variable(u), _)            => Some(extend(u, v, s))
+      case (_, Variable(v))                 => Some(extend(v, u, s))
+      case (Term.LValue(u), Term.LValue(v)) => if (u == v) Some(s) else None
+      case (u @ Term.Pair(x, y), v @ Term.Pair(x1, y1)) =>
+        unify(x, x1, s) match {
+          case Some(s1) => unify(y, y1, s1)
+          case None     => None
+        }
+      case _ => None
     }
   }
 
@@ -95,7 +100,7 @@ object Goal {
         case Some(u) => walk(u, s)
         case None    => term
       }
-    case u @ Term.Symbol(name, args) => u
+    case _ => u
   }
 
   private final case class Equiv(a: Term, b: Term) extends Goal
