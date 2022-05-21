@@ -11,16 +11,35 @@ object Term {
 }
 sealed trait Variable extends Term { self =>
   import Variable._
+  override def canEqual(obj: Any): Boolean =
+    obj != null && obj.isInstanceOf[Variable]
+  override def equals(obj: Any): Boolean =
+    this.eq(obj.asInstanceOf[AnyRef]) || canEqual(obj) && {
+      val other = obj.asInstanceOf[Variable]
+      id == other.id
+    }
+
+  override def hashCode: Int = id.hashCode
+
   def name: String
+
   def id: Id
+
   def isAnonymous: Boolean = self match {
     case Anonymous(_) => true
     case _            => false
   }
 
+  override def productArity: Int = 2
+  override def productElement(n: Int): Any = n match {
+    case 0 => self.id
+    case 1 => self.name
+    case n => throw new IndexOutOfBoundsException(n.toString)
+  }
+
   override def toString(): String = self match {
-    case Anonymous(id)   => s"#$id"
     case Named(name, id) => s"$name(#$id)"
+    case v   => s"#${v.id}"
   }
 }
 
@@ -30,14 +49,28 @@ object Variable {
   val first: Variable = default
 
   def unapply(term: Term): Option[(Variable, Id, String)] = term match {
-    case v @ Anonymous(_) => Some((v, v.id, v.name))
-    case v @ Named(_, _)  => Some((v, v.id, v.name))
-    case _                => None
+    case v: Anonymous => Some((v, v.id, v.name))
+    case v: Named     => Some((v, v.id, v.name))
+    case _            => None
   }
 
-  private[kernel] final case class Anonymous(id: Id) extends Variable {
+  private[kernel] final class Anonymous(val id: Id) extends Variable {
     def name: String = s"#$id"
   }
+  object Anonymous {
+    def apply(id: Id): Anonymous = new Anonymous(id)
+    def unapply(term: Term): Option[Id] = term match {
+      case v: Anonymous => Some(v.id)
+      case _            => None
+    }
+  }
 
-  private[kernel] final case class Named(name: String, id: Id) extends Variable
+  private[kernel] final class Named(val name: String, val id: Id) extends Variable
+  object Named {
+    def apply(name: String, id: Int): Named = new Named(name, id)
+    def unapply(term: Term): Option[(String, Id)] = term match {
+      case v: Named => Some((v.name, v.id))
+      case _        => None
+    }
+  }
 }
