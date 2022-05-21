@@ -52,12 +52,17 @@ object SubstitutionsSpec extends DefaultRunnableSpec {
 
         assertTrue(
           sut.walk(a) == cat,
+          sut.valueOf(a) == sut.walk(a),
           sut.walk(b) == cat,
+          sut.valueOf(b) == sut.walk(b),
           sut.walk(c) == d,
+          sut.valueOf(c) == sut.walk(c),
           // Walk doesn't know anything extra about d (even though it would unify with c)
           sut.walk(d) == d,
+          sut.valueOf(d) == sut.walk(d),
           // Walk knows nothing extra about e (we have no substitutions)
-          sut.walk(e) == e
+          sut.walk(e) == e,
+          sut.valueOf(e) == sut.walk(e)
         )
       }
     )
