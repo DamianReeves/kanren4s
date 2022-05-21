@@ -1,31 +1,22 @@
 package kanren4s.kernel
 
-sealed trait Goal extends Product with Serializable { self => }
-object Goal {}
+sealed trait Goal extends Product with Serializable { self =>
+  import Goal._
+  final def run(state: State): State = runWith(state)(GoalRunner.default)
+  final def runWith(state: State)(runner: GoalRunner): State =
+    runner.run(self, state)
+}
+object Goal {
+  def eq(x: Term, y: Term): Goal = Eq(x, y)
+  def fresh(block: Term.Variable => Goal): Goal = Fresh(block)
 
-sealed trait Term extends Product with Serializable { self => }
-object Term {
-  sealed trait Variable extends Term { self =>
-    import Variable._
-    def name: String
-    def id: Int
-    def isAnonymous: Boolean = self match {
-      case Anonymous(_) => true
-      case _            => false
-    }
-
-    override def toString(): String = self match {
-      case Anonymous(id)   => s"#$id"
-      case Named(name, id) => s"$name(#$id)"
-    }
+  final case class Settings()
+  trait EvaluationContext {
+    def sett
   }
 
-  object Variable {
-    private final case class Anonymous(id: Int) extends Variable {
-      def name: String = s"$id"
-    }
-
-    private final case class Named(name: String, id: Int) extends Variable
-  }
-
+  private final case class Eq(a: Term, b: Term) extends Goal
+  private final case class Disj(g1: Goal, g2: Goal) extends Goal
+  private final case class Conj(g1: Goal, g2: Goal) extends Goal
+  private final case class Fresh(get: Term.Variable => Goal) extends Goal
 }
