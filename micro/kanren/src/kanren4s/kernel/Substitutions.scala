@@ -11,12 +11,20 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
   def andAlsoGiven(variable: Variable, term: Term): Substitutions =
     self.extend(variable, term).getOrElse(self)
 
+  /** Adds a new binding withiout first doing an occurs check. */
+  def assign(variable: Variable, term: Term): Substitutions =
+    Substitutions(bindings + (variable -> term))
+
+  /** Adds new bindings without first doing an occurs check. */
+  def assignVariables(elems: (Variable, Term)*): Substitutions =
+    Substitutions(bindings ++ elems.toMap)
+
   def extend(variable: Variable, term: Term): Option[Substitutions] = {
-    if (occurs(variable, term)) None
+    if (occursCheck(variable, term)) None
     else Some(Substitutions(bindings + (variable -> term)))
   }
 
-  def occurs(
+  def occursCheck(
       variable: Variable,
       term: Term
   ): Boolean = {
@@ -24,7 +32,7 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
     t match {
       case v @ Variable(_, _) => variable == v
       case Term.Pair(left, right) =>
-        occurs(variable, left) || occurs(variable, right)
+        occursCheck(variable, left) || occursCheck(variable, right)
       case _ => false
     }
   }
@@ -46,6 +54,11 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
 
     loop(term, None)
   }
+
+  /** An alias for `walk`. It walks all substitutions looking for a value and
+    * returns the original term if not substitutions were found
+    */
+  @inline def valueOf(candidate: Term): Term = walk(candidate)
 }
 object Substitutions {
   val empty: Substitutions = Substitutions(Map.empty)
@@ -74,10 +87,12 @@ object Substitutions {
       (t1, t2) match {
         case (t1 @ Variable(_, _), t2) =>
           // Try and extend the substitution since we have a variable on the left
-          s.extend(t1, t2)
+          if (s.occursCheck(t1, t2)) None
+          else Some(s.assign(t1, t2))
         case (t1, t2 @ Variable(_, _)) =>
           // Try and unify by flipping since we have a variable on the right
-          unify(t2, t1)(s)
+          if (s.occursCheck(t2, t1)) None
+          else Some(s.assign(t2, t1))
         case (Term.Pair(l1, r1), Term.Pair(l2, r2)) =>
           // Unify the left and right sides of the pair
           unify(l1, l2)(s).flatMap(s1 => unify(r1, r2)(s1))

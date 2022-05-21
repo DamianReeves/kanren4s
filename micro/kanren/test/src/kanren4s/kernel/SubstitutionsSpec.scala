@@ -28,12 +28,13 @@ object SubstitutionsSpec extends DefaultRunnableSpec {
       test("Unifying an empty substitution with unifyable facts") {
         val v = Variable.at(0) ?? "v"
         val u = Variable.at(1) ?? "u"
+        val cat = Term.fromValue("cat")
         val `v ≡ u` = Term.Pair(v, u)
-        val `u ≡ cat` = Term.Pair(u, Term.fromValue("cat"))
-        val actual = Substitutions.empty.unify(u, v)
-        println(s"actual: $actual")
-        assertTrue(actual == None)
-      } @@ ignore @@ tag("Not Ready")
+        val `u ≡ cat` = Term.Pair(u, cat)
+        val actual = Substitutions.empty.unify(`v ≡ u`, `u ≡ cat`)
+        val expected = Substitutions.setupUnchecked(v -> u, u -> cat)
+        assertTrue(actual == Some(expected))
+      }
     ) + suite("Walking")(
       test("Walking through a substitution should succeed") {
         val a = Variable.at(0) ?? "a"
