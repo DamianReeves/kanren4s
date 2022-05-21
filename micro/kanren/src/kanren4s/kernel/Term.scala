@@ -2,7 +2,20 @@ package kanren4s.kernel
 
 sealed trait Term extends Product with Serializable { self => }
 object Term {
+  def apply[A](a: A): Term = a match {
+    case a: Term => a
+    case a       => fromValue(a)
+  }
+
+  def cons[A, B](pair: (A, B)): Term = {
+    val t1 = Term(pair._1)
+    val t2 = Term(pair._2)
+    Pair(t1, t2)
+  }
+
   def fromValue[A](a: => A): Term = Value(a)
+  def fromPair(pair: (Term, Term)): Term = Pair(pair._1, pair._2)
+
   // def variable(name: String): Term = Variable.Named(name)
   type Variable = kanren4s.kernel.Variable
   val Variable: kanren4s.kernel.Variable.type = kanren4s.kernel.Variable
