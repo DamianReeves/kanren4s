@@ -18,6 +18,9 @@ final case class Variable(id: VariableId, label: Option[String]) extends Term {
     case Some(name) => name
   }
 
+  def next: Variable = id.nextVariable
+  def next(label: String): Variable = Variable(id.next, Option(label))
+
   def withLabel(label: String): Variable = copy(label = Option(label))
 
   override def toString: String = label match {
@@ -30,6 +33,8 @@ object Variable {
   val default: Variable = anonymous(VariableId.first)
   val first: Variable = default
 
-  def anonymous(id: VariableId): Variable = Variable(id, None)
-  def named(id: VariableId, name: String): Variable = Variable(id, Some(name))
+  def anonymous(id: VariableId = VariableId.first): Variable =
+    Variable(id, None)
+  def named(name: String, id: VariableId = VariableId.first): Variable =
+    Variable(id, Some(name))
 }

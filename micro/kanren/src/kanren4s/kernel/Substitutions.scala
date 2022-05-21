@@ -2,6 +2,16 @@ package kanren4s.kernel
 
 final case class Substitutions(bindings: Map[Variable, Term]) { self =>
 
+  def and(other: Substitutions): Substitutions =
+    Substitutions(bindings ++ other.bindings)
+
+  /**
+   * Trys to add another substitution to this one; however, if the occurs check fails,
+   * we return the original substitution.
+   */
+  def andAlsoGiven(variable: Variable, term: Term): Substitutions =
+    self.extend(variable, term).getOrElse(self)
+
   def extend(variable: Variable, term: Term): Option[Substitutions] = {
     if (occurs(variable, term)) None
     else Some(Substitutions(bindings + (variable -> term)))
@@ -37,4 +47,16 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
 }
 object Substitutions {
   val empty: Substitutions = Substitutions(Map.empty)
+
+  /** Sets up an initial set of substitutions without doing any occurs checks or
+    * other validations.
+    */
+  def setupUnchecked(bindings: Map[Variable, Term]): Substitutions =
+    Substitutions(bindings)
+
+  /** Sets up an initial set of substitutions without doing any occurs checks or
+    * other validations.
+    */
+  def setupUnchecked(bindings: (Variable, Term)*): Substitutions =
+    setupUnchecked(bindings.toMap)
 }
