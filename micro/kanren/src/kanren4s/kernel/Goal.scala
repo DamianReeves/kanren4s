@@ -3,13 +3,14 @@ package kanren4s.kernel
 sealed trait Goal extends Product with Serializable { self =>
   import Goal._
 
-  final def run(): State = run(State.empty)
+  final def run(): GoalRunner.default.Stream = run(State.empty)
 
-  final def run(state: State): State = runWith(state)(GoalRunner.default)
+  final def run(state: State): GoalRunner.default.Stream =
+    runWith(state)(GoalRunner.default)
 
-  final def runWith(runner: GoalRunner): State =
+  final def runWith(runner: GoalRunner): runner.Stream =
     runner.run(self, State.empty)
-  final def runWith(state: State)(runner: GoalRunner): State =
+  final def runWith(state: State)(runner: GoalRunner): runner.Stream =
     runner.run(self, state)
 }
 object Goal {
@@ -21,8 +22,9 @@ object Goal {
     def sett
   }
 
-  private final case class Eq(a: Term, b: Term) extends Goal
-  private final case class Disj(g1: Goal, g2: Goal) extends Goal
-  private final case class Conj(g1: Goal, g2: Goal) extends Goal
-  private final case class Fresh(get: Term.Variable => Goal) extends Goal
+  private[kernel] final case class Eq(a: Term, b: Term) extends Goal
+  private[kernel] final case class Disj(g1: Goal, g2: Goal) extends Goal
+  private[kernel] final case class Conj(g1: Goal, g2: Goal) extends Goal
+  private[kernel] final case class Fresh(get: Term.Variable => Goal)
+      extends Goal
 }

@@ -13,9 +13,10 @@ object GoalRunnerSpec extends DefaultRunnableSpec {
         val t1 = cons(cons(cat -> a) -> b)
         val t2 = cons(cons("cat" -> "horse") -> "turtle")
         val state = State.empty.withNextIndex(2)
+        val goal = Goal.eq(t1, t2)
         val sut = GoalRunner.default
-        val actual = sut.eq(t1, t2)(state)
-        assertTrue(actual == sut.Stream.mzero)
+        val actual = sut.run(goal, state)
+        assertTrue(actual.size == 1, actual.head.nextVariableId equalTo 2)
       }
     )
   )

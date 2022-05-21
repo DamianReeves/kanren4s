@@ -75,7 +75,10 @@ object Substitutions {
   def setupUnchecked(bindings: (Variable, Term)*): Substitutions =
     setupUnchecked(bindings.toMap)
 
-  def unify(lhs: Term, rhs: Term)(s: Substitutions): Option[Substitutions] = {
+  def unify(lhs: Term, rhs: Term)(
+      s: Substitutions,
+      enableOccursCheck: Boolean = true
+  ): Option[Substitutions] = {
     val t1 = s.walk(lhs)
     val t2 = s.walk(rhs)
     println(s"Trying to unify $t1 and $t2")
@@ -87,10 +90,12 @@ object Substitutions {
       (t1, t2) match {
         case (t1 @ Variable(_, _), t2) =>
           // Try and extend the substitution since we have a variable on the left
-          s.extend(t1, t2)
+          if (enableOccursCheck) s.extend(t1, t2)
+          else Some(s.assign(t1, t2))
         case (t1, t2 @ Variable(_, _)) =>
           // Try and unify by flipping since we have a variable on the right
-          s.extend(t2, t1)
+          if (enableOccursCheck) s.extend(t2, t1)
+          else Some(s.assign(t2, t1))
         case (Term.Pair(l1, r1), Term.Pair(l2, r2)) =>
           // Unify the left and right sides of the pair
           unify(l1, l2)(s).flatMap(s1 => unify(r1, r2)(s1))
