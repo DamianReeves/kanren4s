@@ -13,7 +13,7 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
   ): Boolean = {
     val t = walk(term)
     t match {
-      case Variable(v, _, _) => variable == v
+      case v @ Variable(_, _) => variable == v
       case Term.Pair(left, right) =>
         occurs(variable, left) || occurs(variable, right)
       case _ => false
@@ -24,7 +24,7 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
     def loop(t: Term, result: Option[Term]): Term =
       (t, result) match {
         case (_, Some(resolved)) => resolved
-        case (Variable(v, _, _), _) =>
+        case (v @ Variable(_, _), _) =>
           bindings.get(v) match {
             case Some(t) => loop(t, None)
             case None    => t

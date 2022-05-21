@@ -13,6 +13,8 @@ trait Kanren4sZioTestModule extends TestModule {
 object micro extends Module {
   object kanren extends ScalaModule {
     def scalaVersion = "2.13.8"
+    def ivyDeps = Agg(com.softwaremill.common.tagging)
+    
     object test extends Tests with Kanren4sZioTestModule {
       def ivyDeps = Agg(dev.zio.zio, dev.zio.`zio-test`, dev.zio.`zio-test-sbt`)
     }
@@ -20,6 +22,13 @@ object micro extends Module {
 }
 
 object Dependencies {
+  case object com {
+    case object softwaremill {
+      case object common {
+        val tagging = ivy"com.softwaremill.common::tagging::2.3.3"
+      }
+    }
+  }
   case object dev {
     case object zio {
       val version = "1.0.14"
