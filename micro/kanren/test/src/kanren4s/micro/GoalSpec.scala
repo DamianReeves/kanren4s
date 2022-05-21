@@ -11,8 +11,7 @@ object GoalSpec extends DefaultRunnableSpec {
             val $42 = Term.LValue(42)
             Goal.equiv($x, $y) and Goal.equiv($x, $42)
           }
-        ),
-        debug = true
+        )
       )
       // println(actual.toList)
       assertTrue(actual.toList.size == 1)

@@ -5,10 +5,9 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
   def and(other: Substitutions): Substitutions =
     Substitutions(bindings ++ other.bindings)
 
-  /**
-   * Trys to add another substitution to this one; however, if the occurs check fails,
-   * we return the original substitution.
-   */
+  /** Trys to add another substitution to this one; however, if the occurs check
+    * fails, we return the original substitution.
+    */
   def andAlsoGiven(variable: Variable, term: Term): Substitutions =
     self.extend(variable, term).getOrElse(self)
 
@@ -29,6 +28,9 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
       case _ => false
     }
   }
+
+  def unify(t1: Term, t2: Term): Option[Substitutions] =
+    Substitutions.unify(t1, t2)(self)
 
   def walk(term: Term): Term = {
     def loop(t: Term, result: Option[Term]): Term =
@@ -59,4 +61,33 @@ object Substitutions {
     */
   def setupUnchecked(bindings: (Variable, Term)*): Substitutions =
     setupUnchecked(bindings.toMap)
+
+  def unify(lhs: Term, rhs: Term)(s: Substitutions): Option[Substitutions] = {
+    val t1 = s.walk(lhs)
+    val t2 = s.walk(rhs)
+    println(s"Trying to unify $t1 and $t2")
+    if (t1 == t2) {
+      // the terms are equal, no unification is needed
+      println(s"Unification: $t1 ≡ $t2")
+      Some(s)
+    } else {
+      (t1, t2) match {
+        case (t1 @ Variable(_, _), t2) =>
+          // Try and extend the substitution since we have a variable on the left
+          s.extend(t1, t2)
+        case (t1, t2 @ Variable(_, _)) =>
+          // Try and unify by flipping since we have a variable on the right
+          unify(t2, t1)(s)
+        case (Term.Pair(l1, r1), Term.Pair(l2, r2)) =>
+          // Unify the left and right sides of the pair
+          unify(l1, l2)(s).flatMap(s1 => unify(r1, r2)(s1))
+        case _ =>
+          // The terms are not equal and cannot be unified
+          None
+      }
+    }
+  }
+
+  def walk(term: Term, substitution: Substitutions): Term =
+    substitution.walk(term)
 }
