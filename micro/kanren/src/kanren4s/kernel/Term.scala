@@ -2,9 +2,12 @@ package kanren4s.kernel
 
 sealed trait Term extends Product with Serializable { self => }
 object Term {
+  def fromValue[A](a: => A): Term = Value(a)
   // def variable(name: String): Term = Variable.Named(name)
   type Variable = kanren4s.kernel.Variable
   val Variable: kanren4s.kernel.Variable.type = kanren4s.kernel.Variable
+  private[kernel] final case class Value[+A](value: A) extends Term
+  private[kernel] final case class Pair(left: Term, right: Term) extends Term
 }
 sealed trait Variable extends Term { self =>
   import Variable._
@@ -23,6 +26,9 @@ sealed trait Variable extends Term { self =>
 
 object Variable {
   type Id = Int
+  val default: Variable = Anonymous(0)
+  val first: Variable = default
+
   def unapply(term: Term): Option[(Variable, Id, String)] = term match {
     case v @ Anonymous(_) => Some((v, v.id, v.name))
     case v @ Named(_, _)  => Some((v, v.id, v.name))

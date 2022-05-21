@@ -2,7 +2,13 @@ package kanren4s.kernel
 
 sealed trait Goal extends Product with Serializable { self =>
   import Goal._
+
+  final def run(): State = run(State.empty)
+
   final def run(state: State): State = runWith(state)(GoalRunner.default)
+
+  final def runWith(runner: GoalRunner): State =
+    runner.run(self, State.empty)
   final def runWith(state: State)(runner: GoalRunner): State =
     runner.run(self, state)
 }

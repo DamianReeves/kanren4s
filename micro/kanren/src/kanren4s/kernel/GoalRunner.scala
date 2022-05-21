@@ -5,14 +5,20 @@ trait GoalRunner {
   type Stream = LazyList[Goal]
 
   def occurs(
-      variable: Term.Variable,
+      variable: Variable,
       term: Term,
       substitutions: Substitutions
   ): Boolean = {
     val t = walk(term, substitutions)
     t match {
       case Variable(v, _, _) => variable == v
-      case _                 => false
+      case Term.Pair(left, right) =>
+        occurs(variable, left, substitutions) || occurs(
+          variable,
+          right,
+          substitutions
+        )
+      case _ => false
     }
   }
 

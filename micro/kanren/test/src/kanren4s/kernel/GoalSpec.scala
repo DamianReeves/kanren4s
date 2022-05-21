@@ -6,8 +6,12 @@ object GoalSpec extends DefaultRunnableSpec {
   def spec = suite("Goal Spec")(
     suite("Fresh")(
       test("Fresh provides fresh variables") {
-        val actual = Goal.fresh(x => ???)
-        assertTrue(actual == ???)
+        var actual:Variable = null
+        Goal.fresh{x =>
+          actual = x
+          Goal.eq(x, x)
+        }
+        assertTrue(actual != null)
       }
     )
   )
