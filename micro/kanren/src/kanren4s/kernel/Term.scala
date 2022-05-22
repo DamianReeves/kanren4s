@@ -2,6 +2,7 @@ package kanren4s.kernel
 
 sealed trait Term extends Product with Serializable { self => }
 object Term {
+  val empty: Term = Empty
   def apply[A](a: A): Term = a match {
     case a: Term => a
     case a       => fromValue(a)
@@ -15,12 +16,15 @@ object Term {
 
   def fromValue[A](a: => A): Term = Value(a)
   def fromPair(pair: (Term, Term)): Term = Pair(pair._1, pair._2)
+  def list(terms: Term*): Term = terms.foldRight(Empty: Term)(Pair(_, _))
 
   // def variable(name: String): Term = Variable.Named(name)
   type Variable = kanren4s.kernel.Variable
   val Variable: kanren4s.kernel.Variable.type = kanren4s.kernel.Variable
+  private[kernel] case object Empty extends Term
   private[kernel] final case class Value[+A](value: A) extends Term
   private[kernel] final case class Pair(left: Term, right: Term) extends Term
+  // private[kernel] final case class Func(apply:Term => Term) extends Term
 }
 
 final case class Variable(id: VariableId, label: Option[String]) extends Term {

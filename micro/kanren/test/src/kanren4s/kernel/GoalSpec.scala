@@ -16,8 +16,12 @@ object GoalSpec extends DefaultRunnableSpec {
         val state = State.empty.withNextIndex(2)
         val goal = Goal.eq(t1, t2)
         val actual = goal(state)
+        val results = actual.take(2)
         println(s"Results: ${actual.toList}")
-        assertTrue(actual.size == 1, actual.head.nextVariableId equalTo 2)
+        assertTrue(
+          actual.toLazyList.size == 1,
+          actual.toLazyList.head.nextVariableId equalTo 2
+        )
       }
     ),
     suite("Fresh")(
@@ -25,7 +29,10 @@ object GoalSpec extends DefaultRunnableSpec {
         val state = State.empty
         val goal = Goal.fresh { (x, y) => Goal.eq(x, y) }
         val result = goal(state)
-        assertTrue(result.size == 1, result.head.nextVariableId equalTo 2)
+        assertTrue(
+          result.size == 1,
+          result.toLazyList.head.nextVariableId equalTo 2
+        )
       }
     ),
     suite("Or/Disjunction")(
@@ -39,16 +46,20 @@ object GoalSpec extends DefaultRunnableSpec {
         val state = State.empty.withNextIndex(4)
         val goal = Goal.or(Goal.eq(t1, t2), Goal.eq(t2, t1))
         val actual = goal(state)
+        val llResults = actual.toLazyList
         println(s"Results Disj: ${actual.toList}")
-        assertTrue(actual.size == 2, actual.head.nextVariableId equalTo 4)
+        assertTrue(actual.size == 2, llResults.head.nextVariableId equalTo 4)
       },
       test("Disjunction should work when its infinite") {
         val goal = Goal.eq(Variable.at(0) ?? "x", Term("turtle")) or Goal.eq(
           Term("turtle"),
-          Variable.at(0) ?? "x"
+          (Variable.at(0) ?? "x")
         )
         val result = goal(State.empty)
-        assertTrue(result.isTraversableAgain)
+        assertTrue(
+          result.toLazyList.isTraversableAgain,
+          result.toLazyList.take(5).toList.size == 5
+        )
       }
     )
   )

@@ -4,7 +4,7 @@ trait ResultsCollector {
   type Stream
   def isEmpty(s: Stream): Boolean
   def append(s1: Stream, s2: Stream): Stream
-  def bind[Col <: ResultsCollector.OfType[Stream]](s: Stream, goal: Goal)(
+  def bind[Col <: ResultsCollector.OfType[Stream]](s: Stream, goal: Goal2)(
       settings: GoalEvalSettings[Stream, Col]
   ): Stream
   def mzero: Stream
@@ -24,7 +24,7 @@ object ResultsCollector {
 
     def append(s1: Stream, s2: Stream): Stream = s1 ++ s2
 
-    def bind[Col <: ResultsCollector.OfType[Stream]](s: Stream, goal: Goal)(
+    def bind[Col <: ResultsCollector.OfType[Stream]](s: Stream, goal: Goal2)(
         settings: GoalEvalSettings[Stream, Col]
     ): Stream = {
       val run = goal(_: State, settings)
