@@ -16,40 +16,24 @@ sealed trait Goal extends Product with Serializable { self =>
   ): ResultsStream = {
     val results: Collector = settings.results
     self match {
-      case Eq(a, b)    => evalEq(a, b, state, settings)
-      case Or(g1, g2)  => evalOr(g1, g2, state, settings)
-      case And(g1, g2) => results.single(state)
+      case Eq(t1, t2) =>
+        state.substitutions.unify(t1, t2) match {
+          case None        => results.mzero
+          case Some(value) => results.mkStream(state.withSubstitutions(value))
+        }
+      case Or(g1, g2) =>
+        val first = g1(state, settings)
+        val second = g2(state, settings)
+        results.append(first, second)
+      case And(g1, g2) =>
+        val states = g1(state, settings)
+        results.bind(states, g2)(settings)
       case Fresh(block) =>
-        val (v,newState) = state.freshVariable()
+        val (v, newState) = state.freshVariable()
         println(s"Have a fresh var: $v")
         val goal = block(v)
         goal.apply(newState, settings)
     }
-  }
-
-  private def evalEq[RS, Col <: ResultsCollector.OfType[RS]](
-      t1: Term,
-      t2: Term,
-      state: State,
-      settings: GoalEvalSettings[RS, Col]
-  ): RS = {
-    val results = settings.results
-    state.substitutions.unify(t1, t2) match {
-      case None        => results.mzero
-      case Some(value) => results.mkStream(state.withSubstitutions(value))
-    }
-  }
-
-  private def evalOr[RS, Col <: ResultsCollector.OfType[RS]](
-      g1: Goal,
-      g2: Goal,
-      state: State,
-      settings: GoalEvalSettings[RS, Col]
-  ): RS = {
-    val results = settings.results
-    val first = g1(state, settings)
-    val second = g2(state, settings)
-    results.append(first, second)
   }
 }
 object Goal {
