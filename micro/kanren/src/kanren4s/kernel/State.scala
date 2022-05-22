@@ -1,7 +1,7 @@
 package kanren4s.kernel
 
 final case class State(
-    substitutions: Substitutions,
+    substitutions: Substitution,
     nextVariableId: VariableId
 ) { self =>
 
@@ -21,11 +21,11 @@ final case class State(
     copy(nextVariableId = VariableId.from(nextIdx))
   def withNextVariableId(nextVariableId: VariableId): State =
     copy(nextVariableId = nextVariableId)
-  def withSubstitutions(substitutions: Substitutions): State =
+  def withSubstitutions(substitutions: Substitution): State =
     copy(substitutions = substitutions)
   def withSubstitutions(bindings: (Variable, Term)*): State =
-    copy(substitutions = Substitutions(bindings.toMap))
+    copy(substitutions = Substitution(bindings.toMap))
 }
 object State {
-  val empty: State = State(Substitutions.empty, VariableId.first)
+  val empty: State = State(Substitution.empty, VariableId.first)
 }

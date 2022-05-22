@@ -1,27 +1,27 @@
 package kanren4s.kernel
 
-final case class Substitutions(bindings: Map[Variable, Term]) { self =>
+final case class Substitution(bindings: Map[Variable, Term]) { self =>
 
-  def and(other: Substitutions): Substitutions =
-    Substitutions(bindings ++ other.bindings)
+  def and(other: Substitution): Substitution =
+    Substitution(bindings ++ other.bindings)
 
   /** Trys to add another substitution to this one; however, if the occurs check
     * fails, we return the original substitution.
     */
-  def andAlsoGiven(variable: Variable, term: Term): Substitutions =
+  def andAlsoGiven(variable: Variable, term: Term): Substitution =
     self.extend(variable, term).getOrElse(self)
 
   /** Adds a new binding withiout first doing an occurs check. */
-  def assign(variable: Variable, term: Term): Substitutions =
-    Substitutions(bindings + (variable -> term))
+  def assign(variable: Variable, term: Term): Substitution =
+    Substitution(bindings + (variable -> term))
 
   /** Adds new bindings without first doing an occurs check. */
-  def assignVariables(elems: (Variable, Term)*): Substitutions =
-    Substitutions(bindings ++ elems.toMap)
+  def assignVariables(elems: (Variable, Term)*): Substitution =
+    Substitution(bindings ++ elems.toMap)
 
-  def extend(variable: Variable, term: Term): Option[Substitutions] = {
+  def extend(variable: Variable, term: Term): Option[Substitution] = {
     if (occursCheck(variable, term)) None
-    else Some(Substitutions(bindings + (variable -> term)))
+    else Some(Substitution(bindings + (variable -> term)))
   }
 
   def isEmpty: Boolean = bindings.isEmpty
@@ -39,8 +39,8 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
     }
   }
 
-  def unify(t1: Term, t2: Term): Option[Substitutions] =
-    Substitutions.unify(t1, t2)(self)
+  def unify(t1: Term, t2: Term): Option[Substitution] =
+    Substitution.unify(t1, t2)(self)
 
   def walk(term: Term): Term = {
     def loop(t: Term, result: Option[Term]): Term =
@@ -62,25 +62,25 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
     */
   @inline def valueOf(candidate: Term): Term = walk(candidate)
 }
-object Substitutions {
-  val empty: Substitutions = Substitutions(Map.empty)
+object Substitution {
+  val empty: Substitution = Substitution(Map.empty)
 
   /** Sets up an initial set of substitutions without doing any occurs checks or
     * other validations.
     */
-  def setupUnchecked(bindings: Map[Variable, Term]): Substitutions =
-    Substitutions(bindings)
+  def setupUnchecked(bindings: Map[Variable, Term]): Substitution =
+    Substitution(bindings)
 
   /** Sets up an initial set of substitutions without doing any occurs checks or
     * other validations.
     */
-  def setupUnchecked(bindings: (Variable, Term)*): Substitutions =
+  def setupUnchecked(bindings: (Variable, Term)*): Substitution =
     setupUnchecked(bindings.toMap)
 
   def unify(lhs: Term, rhs: Term)(
-      s: Substitutions,
+      s: Substitution,
       enableOccursCheck: Boolean = true
-  ): Option[Substitutions] = {
+  ): Option[Substitution] = {
     val t1 = s.walk(lhs)
     val t2 = s.walk(rhs)
     if (t1 == t2) {
@@ -106,6 +106,6 @@ object Substitutions {
     }
   }
 
-  def walk(term: Term, substitution: Substitutions): Term =
+  def walk(term: Term, substitution: Substitution): Term =
     substitution.walk(term)
 }

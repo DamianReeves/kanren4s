@@ -1,12 +1,12 @@
 package kanren4s.kernel
 import zio.test._
 import zio.test.TestAspect.{ignore, tag}
-object SubstitutionsSpec extends DefaultRunnableSpec {
+object SubstitutionSpec extends DefaultRunnableSpec {
   def spec = suite("Substitutions Spec")(
     suite("Given v ≡ 42") {
       val v = Variable.labeled("v")
       val `given v ≡ 42` =
-        Substitutions.setupUnchecked(v -> Term.fromValue(42))
+        Substitution.setupUnchecked(v -> Term.fromValue(42))
       suite("When we do a walk on v")(
         test("Then we should get 42") {
           val sut = `given v ≡ 42`
@@ -31,8 +31,8 @@ object SubstitutionsSpec extends DefaultRunnableSpec {
         val cat = Term.fromValue("cat")
         val `v ≡ u` = Term.Pair(v, u)
         val `u ≡ cat` = Term.Pair(u, cat)
-        val actual = Substitutions.empty.unify(`v ≡ u`, `u ≡ cat`)
-        val expected = Substitutions.setupUnchecked(v -> u, u -> cat)
+        val actual = Substitution.empty.unify(`v ≡ u`, `u ≡ cat`)
+        val expected = Substitution.setupUnchecked(v -> u, u -> cat)
         assertTrue(actual == Some(expected))
       }
     ) + suite("Walking")(
@@ -44,7 +44,7 @@ object SubstitutionsSpec extends DefaultRunnableSpec {
         val e = Variable.at(4) ?? "e"
         val cat = Term.fromValue("cat")
 
-        val sut = Substitutions.setupUnchecked(
+        val sut = Substitution.setupUnchecked(
           c -> d,
           b -> cat,
           a -> b
