@@ -4,7 +4,7 @@ import zio.test.TestAspect.{ignore, tag}
 object SubstitutionsSpec extends DefaultRunnableSpec {
   def spec = suite("Substitutions Spec")(
     suite("Given v ≡ 42") {
-      val v = Variable.named("v")
+      val v = Variable.labeled("v")
       val `given v ≡ 42` =
         Substitutions.setupUnchecked(v -> Term.fromValue(42))
       suite("When we do a walk on v")(

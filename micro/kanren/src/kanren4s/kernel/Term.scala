@@ -37,7 +37,7 @@ final case class Variable(id: VariableId, label: Option[String]) extends Term {
 
   /** Alias for `withLabel`.
     */
-  def labelled(label: String): Variable = withLabel(label)
+  def labeled(label: String): Variable = withLabel(label)
 
   def next: Variable = id.nextVariable
   def next(label: String): Variable = Variable(id.next, Option(label))
@@ -58,6 +58,6 @@ object Variable {
     Variable(id, None)
 
   def at(idx: Int): Variable = anonymous(VariableId.from(idx))
-  def named(name: String, id: VariableId = VariableId.first): Variable =
+  def labeled(name: String, id: VariableId = VariableId.first): Variable =
     Variable(id, Some(name))
 }

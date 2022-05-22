@@ -22,13 +22,34 @@ object GoalSpec extends DefaultRunnableSpec {
     ),
     suite("Fresh")(
       test("Fresh provides fresh variables") {
-        var actual: Variable = null
-        Goal.fresh { x =>
-          actual = x
-          Goal.eq(x, x)
-        }
-        assertTrue(actual != null)
-      } @@ ignore @@ tag("Not Ready")
+        val state = State.empty
+        val goal = Goal.fresh { (x, y) => Goal.eq(x, y) }
+        val result = goal(state)
+        assertTrue(result.size == 1, result.head.nextVariableId equalTo 2)
+      }
+    ),
+    suite("Or/Disjunction")(
+      test("Disjunction should work when it terminates") {
+        val a = Variable.at(0) ?? "a"
+        val b = Variable.at(1) ?? "b"
+        val c = Variable.at(2) ?? "c"
+        val d = Variable.at(3) ?? "d"
+        val t1 = cons(cons(a -> b) -> c)
+        val t2 = cons(cons(a -> d) -> c)
+        val state = State.empty.withNextIndex(4)
+        val goal = Goal.or(Goal.eq(t1, t2), Goal.eq(t2, t1))
+        val actual = goal(state)
+        println(s"Results Disj: ${actual.toList}")
+        assertTrue(actual.size == 2, actual.head.nextVariableId equalTo 4)
+      },
+      test("Disjunction should work when its infinite") {
+        val goal = Goal.eq(Variable.at(0) ?? "x", Term("turtle")) or Goal.eq(
+          Term("turtle"),
+          Variable.at(0) ?? "x"
+        )
+        val result = goal(State.empty)
+        assertTrue(result.isTraversableAgain)
+      }
     )
   )
 }

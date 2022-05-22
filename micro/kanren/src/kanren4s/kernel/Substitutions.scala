@@ -24,6 +24,8 @@ final case class Substitutions(bindings: Map[Variable, Term]) { self =>
     else Some(Substitutions(bindings + (variable -> term)))
   }
 
+  def isEmpty: Boolean = bindings.isEmpty
+
   def occursCheck(
       variable: Variable,
       term: Term
@@ -81,10 +83,8 @@ object Substitutions {
   ): Option[Substitutions] = {
     val t1 = s.walk(lhs)
     val t2 = s.walk(rhs)
-    println(s"Trying to unify $t1 and $t2")
     if (t1 == t2) {
       // the terms are equal, no unification is needed
-      println(s"Unification: $t1 ≡ $t2")
       Some(s)
     } else {
       (t1, t2) match {
