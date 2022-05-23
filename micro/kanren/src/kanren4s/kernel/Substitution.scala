@@ -1,6 +1,6 @@
 package kanren4s.kernel
 
-final case class Substitution(bindings: Map[Variable, Term]) { self =>
+final case class Substitution(bindings: Map[Var, Term]) { self =>
 
   def and(other: Substitution): Substitution =
     Substitution(bindings ++ other.bindings)
@@ -8,18 +8,18 @@ final case class Substitution(bindings: Map[Variable, Term]) { self =>
   /** Trys to add another substitution to this one; however, if the occurs check
     * fails, we return the original substitution.
     */
-  def andAlsoGiven(variable: Variable, term: Term): Substitution =
+  def andAlsoGiven(variable: Var, term: Term): Substitution =
     self.extend(variable, term).getOrElse(self)
 
   /** Adds a new binding withiout first doing an occurs check. */
-  def assign(variable: Variable, term: Term): Substitution =
+  def assign(variable: Var, term: Term): Substitution =
     Substitution(bindings + (variable -> term))
 
   /** Adds new bindings without first doing an occurs check. */
-  def assignVariables(elems: (Variable, Term)*): Substitution =
+  def assignVariables(elems: (Var, Term)*): Substitution =
     Substitution(bindings ++ elems.toMap)
 
-  def extend(variable: Variable, term: Term): Option[Substitution] = {
+  def extend(variable: Var, term: Term): Option[Substitution] = {
     if (occursCheck(variable, term)) None
     else Some(Substitution(bindings + (variable -> term)))
   }
@@ -27,12 +27,12 @@ final case class Substitution(bindings: Map[Variable, Term]) { self =>
   def isEmpty: Boolean = bindings.isEmpty
 
   def occursCheck(
-      variable: Variable,
+      variable: Var,
       term: Term
   ): Boolean = {
     val t = walk(term)
     t match {
-      case v @ Variable(_, _) => variable == v
+      case v @ Var(_, _) => variable == v
       case (head :: tail) =>
         occursCheck(variable, head) || occursCheck(variable, tail)
       case _ => false
@@ -46,7 +46,7 @@ final case class Substitution(bindings: Map[Variable, Term]) { self =>
     def loop(t: Term, result: Option[Term]): Term =
       (t, result) match {
         case (_, Some(resolved)) => resolved
-        case (v @ Variable(_, _), _) =>
+        case (v @ Var(_, _), _) =>
           bindings.get(v) match {
             case Some(t) => loop(t, None)
             case None    => t
@@ -68,13 +68,13 @@ object Substitution {
   /** Sets up an initial set of substitutions without doing any occurs checks or
     * other validations.
     */
-  def setupUnchecked(bindings: Map[Variable, Term]): Substitution =
+  def setupUnchecked(bindings: Map[Var, Term]): Substitution =
     Substitution(bindings)
 
   /** Sets up an initial set of substitutions without doing any occurs checks or
     * other validations.
     */
-  def setupUnchecked(bindings: (Variable, Term)*): Substitution =
+  def setupUnchecked(bindings: (Var, Term)*): Substitution =
     setupUnchecked(bindings.toMap)
 
   def unify(lhs: Term, rhs: Term)(
@@ -88,11 +88,11 @@ object Substitution {
       Some(s)
     } else {
       (t1, t2) match {
-        case (t1 @ Variable(_, _), t2) =>
+        case (t1 @ Var(_, _), t2) =>
           // Try and extend the substitution since we have a variable on the left
           if (enableOccursCheck) s.extend(t1, t2)
           else Some(s.assign(t1, t2))
-        case (t1, t2 @ Variable(_, _)) =>
+        case (t1, t2 @ Var(_, _)) =>
           // Try and unify by flipping since we have a variable on the right
           if (enableOccursCheck) s.extend(t2, t1)
           else Some(s.assign(t2, t1))

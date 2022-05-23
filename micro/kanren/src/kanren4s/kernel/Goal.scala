@@ -31,9 +31,9 @@ sealed trait Goal extends Product with Serializable { self =>
 }
 object Goal {
   def eq(x: Term, y: Term): Goal = Eq(x, y)
-  def fresh(block: Variable => Goal): Goal = Fresh(block)
-  def fresh(block: (Variable, Variable) => Goal): Goal =
-    Fresh((x: Variable) => Fresh((y: Variable) => block(x, y)))
+  def fresh(block: Var => Goal): Goal = Fresh(block)
+  def fresh(block: (Var, Var) => Goal): Goal =
+    Fresh((x: Var) => Fresh((y: Var) => block(x, y)))
   def or(left: Goal, right: Goal): Goal = Or(left, right)
 
   final case class Settings()
@@ -43,7 +43,7 @@ object Goal {
 
   private[kernel] final case class And(g1: Goal, g2: Goal) extends Goal
   private[kernel] final case class Eq(a: Term, b: Term) extends Goal
-  private[kernel] final case class Fresh(block: Variable => Goal) extends Goal
+  private[kernel] final case class Fresh(block: Var => Goal) extends Goal
   private[kernel] final case class Or(g1: Goal, g2: Goal) extends Goal
   // private[kernel] final case class Succceed() extends Goal
 }

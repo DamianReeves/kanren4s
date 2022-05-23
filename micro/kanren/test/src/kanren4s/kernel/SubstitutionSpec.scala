@@ -4,7 +4,7 @@ import zio.test.TestAspect.{ignore, tag}
 object SubstitutionSpec extends DefaultRunnableSpec {
   def spec = suite("Substitutions Spec")(
     suite("Given v ≡ 42") {
-      val v = Variable.labeled("v")
+      val v = Var.labeled("v")
       val `given v ≡ 42` =
         Substitution.setupUnchecked(v -> 42)
       suite("When we do a walk on v")(
@@ -26,8 +26,8 @@ object SubstitutionSpec extends DefaultRunnableSpec {
       }
     } + suite("Unification")(
       test("Unifying an empty substitution with unifyable facts") {
-        val v = Variable.at(0) ?? "v"
-        val u = Variable.at(1) ?? "u"
+        val v = Var.at(0) ?? "v"
+        val u = Var.at(1) ?? "u"
         val cat = "cat"
         val `v ≡ u` = (v, u)
         val `u ≡ cat` = (u, cat)
@@ -37,11 +37,11 @@ object SubstitutionSpec extends DefaultRunnableSpec {
       }
     ) + suite("Walking")(
       test("Walking through a substitution should succeed") {
-        val a = Variable.at(0) ?? "a"
-        val b = Variable.at(1) ?? "b"
-        val c = Variable.at(2) ?? "c"
-        val d = Variable.at(3) ?? "d"
-        val e = Variable.at(4) ?? "e"
+        val a = Var.at(0) ?? "a"
+        val b = Var.at(1) ?? "b"
+        val c = Var.at(2) ?? "c"
+        val d = Var.at(3) ?? "d"
+        val e = Var.at(4) ?? "e"
         val cat = "cat"
 
         val sut = Substitution.setupUnchecked(

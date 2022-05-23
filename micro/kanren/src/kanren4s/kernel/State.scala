@@ -5,16 +5,16 @@ final case class State(
     nextVariableId: VariableId
 ) { self =>
 
-  def freshVariable(): (Variable, State) = {
+  def freshVariable(): (Var, State) = {
     val id = nextVariableId
     val next = VariableId.next(id)
-    (Variable.anonymous(id), withNextVariableId(next))
+    (Var.anonymous(id), withNextVariableId(next))
   }
 
-  def freshVariable(label: String): (Variable, State) = {
+  def freshVariable(label: String): (Var, State) = {
     val id = nextVariableId
     val next = VariableId.next(id)
-    (Variable.labeled(label, id), withNextVariableId(next))
+    (Var.labeled(label, id), withNextVariableId(next))
   }
 
   def withNextIndex(nextIdx: Int): State =
@@ -23,7 +23,7 @@ final case class State(
     copy(nextVariableId = nextVariableId)
   def withSubstitutions(substitutions: Substitution): State =
     copy(substitutions = substitutions)
-  def withSubstitutions(bindings: (Variable, Term)*): State =
+  def withSubstitutions(bindings: (Var, Term)*): State =
     copy(substitutions = Substitution(bindings.toMap))
 }
 object State {
