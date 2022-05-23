@@ -7,8 +7,8 @@ object GoalSpec extends DefaultRunnableSpec {
   def spec = suite("Goal Spec")(
     suite("Eq")(
       test("eq should return a stream of answers") {
-        val a = Var.at(0) ?? "a"
-        val b = Var.at(1) ?? "b"
+        val a = Var(0) ?? "a"
+        val b = Var(1) ?? "b"
         val cat = "cat"
         val t1 = ((cat -> a) -> b)
         val t2 = (("cat" -> "horse") -> "turtle")
@@ -36,10 +36,10 @@ object GoalSpec extends DefaultRunnableSpec {
     ),
     suite("Or/Disjunction")(
       test("Disjunction should work when it terminates") {
-        val a = Var.at(0) ?? "a"
-        val b = Var.at(1) ?? "b"
-        val c = Var.at(2) ?? "c"
-        val d = Var.at(3) ?? "d"
+        val a = Var(0) ?? "a"
+        val b = Var(1) ?? "b"
+        val c = Var(2) ?? "c"
+        val d = Var(3) ?? "d"
         val t1 = ((a -> b) -> c)
         val t2 = ((a -> d) -> c)
         val state = State.empty.withNextIndex(4)
@@ -50,8 +50,8 @@ object GoalSpec extends DefaultRunnableSpec {
         assertTrue(actual.size == 2, llResults.head.nextVariableId equalTo 4)
       },
       test("Disjunction should work when its infinite") {
-        val goal = Goal.eq(Var.at(0) ?? "x", "turtle") or
-          Goal.eq("turtle", (Var.at(0) ?? "x"))
+        val goal = Goal.eq(Var(0) ?? "x", "turtle") or
+          Goal.eq("turtle", (Var(0) ?? "x"))
         val result = goal(State.empty)
         assertTrue(
           result.toLazyList.isTraversableAgain,

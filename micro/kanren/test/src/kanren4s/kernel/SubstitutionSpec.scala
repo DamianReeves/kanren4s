@@ -26,8 +26,8 @@ object SubstitutionSpec extends DefaultRunnableSpec {
       }
     } + suite("Unification")(
       test("Unifying an empty substitution with unifyable facts") {
-        val v = Var.at(0) ?? "v"
-        val u = Var.at(1) ?? "u"
+        val v = Var(0) ?? "v"
+        val u = Var(1) ?? "u"
         val cat = "cat"
         val `v ≡ u` = (v, u)
         val `u ≡ cat` = (u, cat)
@@ -37,11 +37,11 @@ object SubstitutionSpec extends DefaultRunnableSpec {
       }
     ) + suite("Walking")(
       test("Walking through a substitution should succeed") {
-        val a = Var.at(0) ?? "a"
-        val b = Var.at(1) ?? "b"
-        val c = Var.at(2) ?? "c"
-        val d = Var.at(3) ?? "d"
-        val e = Var.at(4) ?? "e"
+        val a = Var(0) ?? "a"
+        val b = Var(1) ?? "b"
+        val c = Var(2) ?? "c"
+        val d = Var(3) ?? "d"
+        val e = Var(4) ?? "e"
         val cat = "cat"
 
         val sut = Substitution.setupUnchecked(

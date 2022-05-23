@@ -31,10 +31,11 @@ object Var {
   val default: Var = anonymous(VariableId.first)
   val first: Var = default
 
+  def apply(n: Int): Var = Var(VariableId.from(n), None)
+
   def anonymous(id: VariableId = VariableId.first): Var =
     Var(id, None)
 
-  def at(idx: Int): Var = anonymous(VariableId.from(idx))
   def labeled(name: String, id: VariableId = VariableId.first): Var =
     Var(id, Some(name))
 }
