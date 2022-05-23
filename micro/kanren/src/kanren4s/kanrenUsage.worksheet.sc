@@ -8,4 +8,4 @@ def fives: Goal =
     Goal.fromFunction(s => StateStream.suspend(() => disj(q === 5, fives)(s)))
   )
 
-fives(emptyState)
+fives(emptyState).take(5)
