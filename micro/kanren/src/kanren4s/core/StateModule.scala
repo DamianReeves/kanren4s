@@ -26,6 +26,8 @@ trait StateModule extends SubstitutionModule {
   object State {
     val empty: State = State(Substitution.empty, SeqNum.zero)
     def withSubstitution(s: Substitution): State = State(s, SeqNum.zero)
+    def withSubstitutions(substitutions: (Var, Term)*): State =
+      State(substitutions.toMap, SeqNum.zero)
   }
 
   sealed abstract class StateStream extends Product with Serializable { self =>
@@ -41,6 +43,12 @@ trait StateModule extends SubstitutionModule {
       case Empty              => Empty
       case Immature(run)      => Immature(() => run().bind(a))
       case Mature(head, tail) => Mature(head, tail.bind(a))
+    }
+
+    def headOption: Option[State] = self match {
+      case Empty              => None
+      case Immature(run)      => run().headOption
+      case Mature(head, tail) => Some(head)
     }
 
     def peel: Option[(State, StateStream)] = {
@@ -101,9 +109,9 @@ trait StateModule extends SubstitutionModule {
     def suspend(run: () => StateStream): StateStream = Immature(run)
 
     private[kanren4s] case object Empty extends StateStream
-    private[kanren4s] final case class Mature(head: State, tail: StateStream)
+    private[kanren4s] case class Mature(head: State, tail: StateStream)
         extends StateStream
-    private[kanren4s] final case class Immature(run: () => StateStream)
+    private[kanren4s] case class Immature(run: () => StateStream)
         extends StateStream
   }
 

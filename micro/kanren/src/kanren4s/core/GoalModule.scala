@@ -22,10 +22,14 @@ trait GoalModule { self: StateModule =>
         case And(g1, g2) =>
           val states = g1(state)
           StateStream.bind(states, g2)
+        case Fail =>
+          StateStream.empty
         case Fresh(block) =>
           val (v, newState) = state.freshVariable()
           val goal = block(v)
           goal(newState)
+        case FromFunction(f) => f(state)
+        case Succceed        => StateStream.single(state)
       }
     }
   }
@@ -35,17 +39,15 @@ trait GoalModule { self: StateModule =>
     def fresh(block: (Var, Var) => Goal): Goal =
       Fresh((x: Var) => Fresh((y: Var) => block(x, y)))
     def or(left: Goal, right: Goal): Goal = Or(left, right)
+    def and(left: Goal, right: Goal): Goal = And(left, right)
 
-    final case class Settings()
-    trait EvaluationContext {
-      def sett
-    }
-
-    private final case class And(g1: Goal, g2: Goal) extends Goal
-    private final case class Eq(a: Term, b: Term) extends Goal
-    private final case class Fresh(block: Var => Goal) extends Goal
-    private final case class Or(g1: Goal, g2: Goal) extends Goal
-    // private[kernel] final case class Succceed() extends Goal
+    private case class And(g1: Goal, g2: Goal) extends Goal
+    private case class Eq(a: Term, b: Term) extends Goal
+    private case object Fail extends Goal
+    private case class FromFunction(f: State => StateStream) extends Goal
+    private case class Fresh(block: Var => Goal) extends Goal
+    private case class Or(g1: Goal, g2: Goal) extends Goal
+    private case object Succceed extends Goal
   }
 
 }

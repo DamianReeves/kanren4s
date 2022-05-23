@@ -3,7 +3,9 @@ import com.softwaremill.tagging._
 
 trait MicroKanrenCore extends GoalModule { self: StateModule =>
 
-  protected def callFresh(f: Var => Goal): Goal = Goal.fresh(f)
+  def eq(x: Term, y: Term): Goal = Goal.eq(x, y)
+
+  def callFresh(f: Var => Goal): Goal = Goal.fresh(f)
 
   // def pull(s: ResultStream): LazyList[State] = {
   //   def loop(stream: ResultStream, acc: LazyList[State]): LazyList[State] =
@@ -14,5 +16,9 @@ trait MicroKanrenCore extends GoalModule { self: StateModule =>
   //     }
   //   loop(s, LazyList.empty)
   // }
+
+  implicit class TermOps(val self: Term) {
+    def ===(that: Term): Goal = Goal.eq(self, that)
+  }
 
 }
