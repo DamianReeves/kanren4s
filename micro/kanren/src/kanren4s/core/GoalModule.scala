@@ -38,6 +38,7 @@ trait GoalModule { self: StateModule =>
     def fresh(block: Var => Goal): Goal = Fresh(block)
     def fresh(block: (Var, Var) => Goal): Goal =
       Fresh((x: Var) => Fresh((y: Var) => block(x, y)))
+    def fromFunction(f: State => StateStream): Goal = FromFunction(f)
     def or(left: Goal, right: Goal): Goal = Or(left, right)
     def and(left: Goal, right: Goal): Goal = And(left, right)
 
