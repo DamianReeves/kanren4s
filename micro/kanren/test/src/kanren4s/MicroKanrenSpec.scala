@@ -1,4 +1,4 @@
-package kanren4s.kernel
+package kanren4s
 
 import zio.test._
 

@@ -1,0 +1,114 @@
+package kanren4s.core
+
+trait StateModule extends SubstitutionModule {
+  val emptyState: State = State.empty
+
+  case class State(substitution: Substitution, seqNum: SeqNum) { self =>
+
+    def freshVariable(): (Var, State) =
+      (Var.anonymous(seqNum), withNextVariableId(seqNum.next))
+
+    def freshVariable(label: String): (Var, State) =
+      (Var.labeled(label, seqNum), withNextVariableId(seqNum.next))
+
+    def withSeqNum(i: Int): State =
+      copy(seqNum = SeqNum.fromInt(i))
+    def withNextVariableId(seqNum: SeqNum): State =
+      copy(seqNum = seqNum)
+    def withSubstitution(substitution: Substitution): State =
+      copy(substitution = substitution)
+    def withSubstitutions(bindings: (Var, Term)*): State =
+      copy(substitution = bindings.toMap)
+
+    override def toString: String =
+      s"($substitution, $seqNum"
+  }
+  object State {
+    val empty: State = State(Substitution.empty, SeqNum.zero)
+    def withSubstitution(s: Substitution): State = State(s, SeqNum.zero)
+  }
+
+  sealed abstract class StateStream extends Product with Serializable { self =>
+    import StateStream._
+    def ++(that: StateStream): StateStream = self match {
+      case Empty => that
+      // Equivalent to the procedure? case in microKanren
+      case Immature(run)      => Immature(() => that ++ run())
+      case Mature(head, tail) => Mature(head, tail ++ that)
+    }
+
+    def bind[A](a: A): StateStream = self match {
+      case Empty              => Empty
+      case Immature(run)      => Immature(() => run().bind(a))
+      case Mature(head, tail) => Mature(head, tail.bind(a))
+    }
+
+    def peel: Option[(State, StateStream)] = {
+      def loop(stream: StateStream): Option[(State, StateStream)] =
+        stream match {
+          case Empty              => None
+          case Immature(run)      => loop(run())
+          case Mature(head, tail) => Some((head, tail))
+        }
+      loop(self)
+    }
+
+    def size: Int = toLazyList.size
+
+    def take(n: Int): List[State] = {
+      def loop(stream: StateStream, n: Int, acc: List[State]): List[State] =
+        if (n == 0) acc
+        else
+          stream match {
+            case Empty              => acc
+            case Immature(run)      => loop(run(), n, acc)
+            case Mature(head, tail) => loop(tail, n - 1, head :: acc)
+          }
+      loop(self, n, Nil)
+    }
+
+    def toLazyList: LazyList[State] = {
+      def loop(stream: StateStream, acc: LazyList[State]): LazyList[State] =
+        stream match {
+          case Empty              => acc
+          case Immature(run)      => loop(run(), acc)
+          case Mature(head, tail) => loop(tail, head #:: acc)
+        }
+      loop(self, LazyList.empty)
+    }
+
+    def toList: List[State] = {
+      def loop(stream: StateStream, acc: List[State]): List[State] =
+        stream match {
+          case Empty              => acc
+          case Immature(run)      => loop(run(), acc)
+          case Mature(head, tail) => loop(tail, head :: acc)
+        }
+      loop(self, Nil)
+    }
+
+  }
+  object StateStream {
+
+    val empty: StateStream = Empty
+    def append(left: StateStream, right: StateStream): StateStream =
+      left ++ right
+    def bind[A](stream: StateStream, a: A): StateStream = stream.bind(a)
+    def both(a: State, b: State): StateStream = Mature(a, Mature(b, Empty))
+    def cons(head: State, tail: StateStream): StateStream = Mature(head, tail)
+    def list(state: State*): StateStream = state.foldRight(empty)(cons)
+    def single(state: State): StateStream = Mature(state, Empty)
+    def suspend(run: () => StateStream): StateStream = Immature(run)
+
+    private[kanren4s] case object Empty extends StateStream
+    private[kanren4s] final case class Mature(head: State, tail: StateStream)
+        extends StateStream
+    private[kanren4s] final case class Immature(run: () => StateStream)
+        extends StateStream
+  }
+
+  trait StateLike { self =>
+    def substitution: Substitution
+    def seqNumn: SeqNum
+  }
+}

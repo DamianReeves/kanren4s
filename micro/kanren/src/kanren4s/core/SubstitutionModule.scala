@@ -1,19 +1,19 @@
-package kanren4s.kernel
+package kanren4s.core
 import com.softwaremill.tagging._
+import predef.SeqNumOps
 
-trait MicroKanrenCore {
+trait SubstitutionModule {
+
   type Term = Any
-  final type Substitution = Map[Var, Term]
-  object Substitution {
-    def apply(pairs: (Var, Term)*): Substitution = Map(pairs: _*)
-    def empty: Substitution = Map.empty
-  }
-  type State = (Substitution, VariableId)
-  object State {
-    def apply(substitution: Substitution, variableId: VariableId): State =
-      (substitution, variableId)
-    def empty: State = (Substitution.empty, VariableId.first)
-  }
+
+  type SeqNum = predef.SeqNum
+  val SeqNum = predef.SeqNum
+
+  final type Substitution = predef.Substitution[Term]
+  val Substitution = predef.Substitution
+
+  final type Var = predef.Var
+  val Var = predef.Var
 
   /** Adds a new binding without first doing an occurs check. */
   def assign(
@@ -29,9 +29,7 @@ trait MicroKanrenCore {
   ): Substitution =
     subst ++ elems.toMap
 
-  def emptyState = (Map.empty, VariableId.first)
-
-  def equalTo[A, B](a: A, b: B): Boolean = a == b
+  protected def equalTo[A, B](a: A, b: B): Boolean = a == b
 
   def extend(
       variable: Var,
@@ -55,6 +53,7 @@ trait MicroKanrenCore {
       case _ => false
     }
   }
+  implicit def toSeqNumOps(n: SeqNum): SeqNumOps = new SeqNumOps(n)
 
   /** An alias for `walk`. It walks all substitutions looking for a value and
     * returns the original term if not substitutions were found
