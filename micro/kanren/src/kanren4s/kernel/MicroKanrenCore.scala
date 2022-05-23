@@ -1,7 +1,7 @@
 package kanren4s.kernel
 import com.softwaremill.tagging._
 
-trait MicroKanrenModule {
+trait MicroKanrenCore {
   type Term = Any
   final type Substitution = Map[Var, Term]
   object Substitution {
