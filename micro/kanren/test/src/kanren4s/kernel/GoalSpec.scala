@@ -18,8 +18,8 @@ object GoalSpec extends DefaultRunnableSpec {
         val results = actual.take(2)
         println(s"Results: ${actual.toList}")
         assertTrue(
-          actual.toLazyList.size == 1,
-          actual.toLazyList.head.nextVariableId equalTo 2
+          actual.toList.size == 1,
+          actual.toList.head.nextVariableId equalTo 2
         )
       }
     ),
@@ -48,15 +48,6 @@ object GoalSpec extends DefaultRunnableSpec {
         val llResults = actual.toLazyList
         println(s"Results Disj: ${actual.toList}")
         assertTrue(actual.size == 2, llResults.head.nextVariableId equalTo 4)
-      },
-      test("Disjunction should work when its infinite") {
-        val goal = Goal.eq(Var(0) ?? "x", "turtle") or
-          Goal.eq("turtle", (Var(0) ?? "x"))
-        val result = goal(State.empty)
-        assertTrue(
-          result.toLazyList.isTraversableAgain,
-          result.toLazyList.take(5).toList.size == 5
-        )
       }
     )
   )
