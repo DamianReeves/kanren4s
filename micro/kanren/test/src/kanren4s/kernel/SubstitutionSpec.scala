@@ -6,12 +6,12 @@ object SubstitutionSpec extends DefaultRunnableSpec {
     suite("Given v ≡ 42") {
       val v = Variable.labeled("v")
       val `given v ≡ 42` =
-        Substitution.setupUnchecked(v -> Term.fromValue(42))
+        Substitution.setupUnchecked(v -> 42)
       suite("When we do a walk on v")(
         test("Then we should get 42") {
           val sut = `given v ≡ 42`
           val actual = sut.walk(v)
-          assertTrue(actual == Term.fromValue(42))
+          assertTrue(actual == 42)
         }
       ) + suite("and u ≡ v") {
         val u = v.next("u")
@@ -20,7 +20,7 @@ object SubstitutionSpec extends DefaultRunnableSpec {
           test("Then we should get 42") {
             val sut = `and u ≡ v`
             val actual = sut.walk(u)
-            assertTrue(actual == Term.fromValue(42))
+            assertTrue(actual == 42)
           }
         )
       }
@@ -28,9 +28,9 @@ object SubstitutionSpec extends DefaultRunnableSpec {
       test("Unifying an empty substitution with unifyable facts") {
         val v = Variable.at(0) ?? "v"
         val u = Variable.at(1) ?? "u"
-        val cat = Term.fromValue("cat")
-        val `v ≡ u` = Term.Pair(v, u)
-        val `u ≡ cat` = Term.Pair(u, cat)
+        val cat = "cat"
+        val `v ≡ u` = (v, u)
+        val `u ≡ cat` = (u, cat)
         val actual = Substitution.empty.unify(`v ≡ u`, `u ≡ cat`)
         val expected = Substitution.setupUnchecked(v -> u, u -> cat)
         assertTrue(actual == Some(expected))
@@ -42,7 +42,7 @@ object SubstitutionSpec extends DefaultRunnableSpec {
         val c = Variable.at(2) ?? "c"
         val d = Variable.at(3) ?? "d"
         val e = Variable.at(4) ?? "e"
-        val cat = Term.fromValue("cat")
+        val cat = "cat"
 
         val sut = Substitution.setupUnchecked(
           c -> d,

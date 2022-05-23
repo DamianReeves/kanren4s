@@ -2,7 +2,6 @@ package kanren4s.kernel
 
 import zio.test._
 import zio.test.TestAspect.{ignore, tag}
-import Term.cons
 
 object GoalSpec extends DefaultRunnableSpec {
   def spec = suite("Goal Spec")(
@@ -10,9 +9,9 @@ object GoalSpec extends DefaultRunnableSpec {
       test("eq should return a stream of answers") {
         val a = Variable.at(0) ?? "a"
         val b = Variable.at(1) ?? "b"
-        val cat = Term.fromValue("cat")
-        val t1 = cons(cons(cat -> a) -> b)
-        val t2 = cons(cons("cat" -> "horse") -> "turtle")
+        val cat = "cat"
+        val t1 = ((cat -> a) -> b)
+        val t2 = (("cat" -> "horse") -> "turtle")
         val state = State.empty.withNextIndex(2)
         val goal = Goal.eq(t1, t2)
         val actual = goal(state)
@@ -41,8 +40,8 @@ object GoalSpec extends DefaultRunnableSpec {
         val b = Variable.at(1) ?? "b"
         val c = Variable.at(2) ?? "c"
         val d = Variable.at(3) ?? "d"
-        val t1 = cons(cons(a -> b) -> c)
-        val t2 = cons(cons(a -> d) -> c)
+        val t1 = ((a -> b) -> c)
+        val t2 = ((a -> d) -> c)
         val state = State.empty.withNextIndex(4)
         val goal = Goal.or(Goal.eq(t1, t2), Goal.eq(t2, t1))
         val actual = goal(state)
@@ -51,10 +50,8 @@ object GoalSpec extends DefaultRunnableSpec {
         assertTrue(actual.size == 2, llResults.head.nextVariableId equalTo 4)
       },
       test("Disjunction should work when its infinite") {
-        val goal = Goal.eq(Variable.at(0) ?? "x", Term("turtle")) or Goal.eq(
-          Term("turtle"),
-          (Variable.at(0) ?? "x")
-        )
+        val goal = Goal.eq(Variable.at(0) ?? "x", "turtle") or
+          Goal.eq("turtle", (Variable.at(0) ?? "x"))
         val result = goal(State.empty)
         assertTrue(
           result.toLazyList.isTraversableAgain,

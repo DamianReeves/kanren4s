@@ -33,8 +33,8 @@ final case class Substitution(bindings: Map[Variable, Term]) { self =>
     val t = walk(term)
     t match {
       case v @ Variable(_, _) => variable == v
-      case Term.Pair(left, right) =>
-        occursCheck(variable, left) || occursCheck(variable, right)
+      case (head :: tail) =>
+        occursCheck(variable, head) || occursCheck(variable, tail)
       case _ => false
     }
   }
@@ -96,9 +96,15 @@ object Substitution {
           // Try and unify by flipping since we have a variable on the right
           if (enableOccursCheck) s.extend(t2, t1)
           else Some(s.assign(t2, t1))
-        case (Term.Pair(l1, r1), Term.Pair(l2, r2)) =>
-          // Unify the left and right sides of the pair
-          unify(l1, l2)(s).flatMap(s1 => unify(r1, r2)(s1))
+        case ((l1, l2), (r1, r2)) =>
+          unify(l1, r1)(s, enableOccursCheck).flatMap(s =>
+            unify(l2, r2)(s, enableOccursCheck)
+          )
+        case (head1 :: tail1, head2 :: tail2) =>
+          unify(head1, head2)(s, enableOccursCheck) match {
+            case Some(s) => unify(tail1, tail2)(s, enableOccursCheck)
+            case None    => None
+          }
         case _ =>
           // The terms are not equal and cannot be unified
           None
