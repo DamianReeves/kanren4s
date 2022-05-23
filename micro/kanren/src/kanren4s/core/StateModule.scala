@@ -35,14 +35,16 @@ trait StateModule extends SubstitutionModule {
     def ++(that: StateStream): StateStream = self match {
       case Empty => that
       // Equivalent to the procedure? case in microKanren
-      case Immature(run)      => Immature(() => that ++ run())
+      case Immature(run) =>
+        Immature(() => StateStream.suspend(() => that ++ run()))
       case Mature(head, tail) => Mature(head, tail ++ that)
     }
 
-    def bind[A](a: A): StateStream = self match {
-      case Empty              => Empty
-      case Immature(run)      => Immature(() => run().bind(a))
-      case Mature(head, tail) => Mature(head, tail.bind(a))
+    def bind(f: State => StateStream): StateStream = self match {
+      case Empty => Empty
+      case Immature(run) =>
+        Immature(() => StateStream.suspend(() => run().bind(f)))
+      case Mature(head, tail) => f(head) ++ tail.bind(f)
     }
 
     def headOption: Option[State] = self match {
@@ -101,7 +103,7 @@ trait StateModule extends SubstitutionModule {
     val empty: StateStream = Empty
     def append(left: StateStream, right: StateStream): StateStream =
       left ++ right
-    def bind[A](stream: StateStream, a: A): StateStream = stream.bind(a)
+    def bind(stream: StateStream, f: State => StateStream): StateStream = stream.bind(f)
     def both(a: State, b: State): StateStream = Mature(a, Mature(b, Empty))
     def cons(head: State, tail: StateStream): StateStream = Mature(head, tail)
     def list(state: State*): StateStream = state.foldRight(empty)(cons)

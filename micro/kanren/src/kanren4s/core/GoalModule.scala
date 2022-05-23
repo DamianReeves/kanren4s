@@ -1,11 +1,12 @@
 package kanren4s.core
 
-trait GoalModule { self: StateModule =>
+trait GoalModule extends StateModule { self =>
+
   sealed trait Goal extends Product with Serializable { self =>
     import Goal._
 
-    def ||(that: Goal): Goal = Or(this, that)
-    def or(that: Goal): Goal = Or(self, that)
+    def ||(that: Goal): Goal = Goal.or(this, that)
+    def or(that: Goal): Goal = Goal.or(self, that)
 
     def apply(state: State): StateStream = {
       self match {
@@ -21,24 +22,28 @@ trait GoalModule { self: StateModule =>
           StateStream.append(first, second)
         case And(g1, g2) =>
           val states = g1(state)
-          StateStream.bind(states, g2)
+          StateStream.bind(states, g2.apply)
         case Fail =>
           StateStream.empty
-        case Fresh(block) =>
-          val (v, newState) = state.freshVariable()
-          val goal = block(v)
-          goal(newState)
         case FromFunction(f) => f(state)
-        case Succceed        => StateStream.single(state)
+        case Snooze(goal) =>
+          goal match {
+            case FromFunction(f) => StateStream.suspend(() => f(state))
+            case g               => g(state)
+          }
+        case Succceed => StateStream.single(state)
       }
     }
   }
   object Goal {
+
+    def callFresh(f: Var => Goal): Goal = Goal.fromFunction {
+      case State(subst, seqNum) =>
+        f(Var(seqNum))(State(subst, seqNum.next))
+    }
+
     def eq(x: Term, y: Term): Goal = Eq(x, y)
-    def fresh(block: Var => Goal): Goal = Fresh(block)
-    def fresh(block: (Var, Var) => Goal): Goal =
-      Fresh((x: Var) => Fresh((y: Var) => block(x, y)))
-    def fromFunction(f: State => StateStream): Goal = FromFunction(f)
+    def fromFunction(f: State => StateStream): Goal = Snooze(FromFunction(f))
     def or(left: Goal, right: Goal): Goal = Or(left, right)
     def and(left: Goal, right: Goal): Goal = And(left, right)
 
@@ -46,8 +51,8 @@ trait GoalModule { self: StateModule =>
     private case class Eq(a: Term, b: Term) extends Goal
     private case object Fail extends Goal
     private case class FromFunction(f: State => StateStream) extends Goal
-    private case class Fresh(block: Var => Goal) extends Goal
     private case class Or(g1: Goal, g2: Goal) extends Goal
+    private case class Snooze(g: Goal) extends Goal
     private case object Succceed extends Goal
   }
 

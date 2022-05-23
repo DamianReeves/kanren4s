@@ -1,11 +1,10 @@
 package kanren4s.core
 import com.softwaremill.tagging._
 
-trait MicroKanrenCore extends GoalModule { self: StateModule =>
+trait MicroKanrenCore extends GoalModule { self =>
 
+  def callFresh(f: Var => Goal): Goal = Goal.callFresh(f)
   def eq(x: Term, y: Term): Goal = Goal.eq(x, y)
-
-  def callFresh(f: Var => Goal): Goal = Goal.fresh(f)
   def conj(g1: Goal, g2: Goal): Goal = Goal.and(g1, g2)
   def disj(g1: Goal, g2: Goal): Goal = Goal.or(g1, g2)
 
