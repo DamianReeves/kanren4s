@@ -61,6 +61,9 @@ final case class Substitution(bindings: Map[Var, Term]) { self =>
     * returns the original term if not substitutions were found
     */
   @inline def valueOf(candidate: Term): Term = walk(candidate)
+
+  override def toString: String =
+    bindings.map { case (k, v) => s"$k -> $v" }.mkString("{", ", ", "}")
 }
 object Substitution {
   val empty: Substitution = Substitution(Map.empty)

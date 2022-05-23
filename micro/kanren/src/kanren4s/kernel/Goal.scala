@@ -23,7 +23,6 @@ sealed trait Goal extends Product with Serializable { self =>
         ResultStream.bind(states, g2)
       case Fresh(block) =>
         val (v, newState) = state.freshVariable()
-        println(s"Have a fresh var: $v")
         val goal = block(v)
         goal(newState)
     }

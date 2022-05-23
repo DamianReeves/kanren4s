@@ -25,6 +25,9 @@ final case class State(
     copy(substitutions = substitutions)
   def withSubstitutions(bindings: (Var, Term)*): State =
     copy(substitutions = Substitution(bindings.toMap))
+
+  override def toString: String =
+    s"($substitutions, $nextVariableId)"
 }
 object State {
   val empty: State = State(Substitution.empty, VariableId.first)

@@ -4,7 +4,16 @@ import com.softwaremill.tagging._
 trait MicroKanrenModule {
   type Term = Any
   final type Substitution = Map[Var, Term]
+  object Substitution {
+    def apply(pairs: (Var, Term)*): Substitution = Map(pairs: _*)
+    def empty: Substitution = Map.empty
+  }
   type State = (Substitution, VariableId)
+  object State {
+    def apply(substitution: Substitution, variableId: VariableId): State =
+      (substitution, variableId)
+    def empty: State = (Substitution.empty, VariableId.first)
+  }
 
   /** Adds a new binding without first doing an occurs check. */
   def assign(
@@ -19,6 +28,8 @@ trait MicroKanrenModule {
       subst: Substitution
   ): Substitution =
     subst ++ elems.toMap
+
+  def emptyState = (Map.empty, VariableId.first)
 
   def equalTo[A, B](a: A, b: B): Boolean = a == b
 
