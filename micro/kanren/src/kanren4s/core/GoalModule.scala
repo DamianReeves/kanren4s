@@ -44,7 +44,12 @@ trait GoalModule extends StateModule { self =>
     }
 
     def eq(x: Term, y: Term): Goal = Eq(x, y)
-    def fromFunction(f: State => StateStream): Goal = Snooze(FromFunction(f))
+    def fromFunction(f: State => StateStream): Goal = {
+      def goal: Goal = FromFunction { state =>
+        or(snooze(goal), Goal.succeed)(state)
+      }
+      goal
+    }
     def or(left: Goal, right: Goal): Goal = Or(left, right)
 
     def snooze(goal: Goal): Goal = Snooze(goal)
