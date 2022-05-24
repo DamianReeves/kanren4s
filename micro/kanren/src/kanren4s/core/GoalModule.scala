@@ -22,21 +22,22 @@ trait GoalModule extends StateModule { self =>
           StateStream.append(first, second)
         case And(g1, g2) =>
           val states = g1(state)
-          StateStream.bind(states, g2.apply)
+          StateStream.bind(states, g2(_))
         case Fail =>
           StateStream.empty
         case FromFunction(f) => f(state)
         case Snooze(goal) =>
-          goal match {
-            case FromFunction(f) => StateStream.suspend(() => f(state))
-            case g               => g(state)
-          }
+          StateStream.suspend(() => goal(state))
         case Succceed => StateStream.single(state)
       }
     }
   }
   object Goal {
 
+    val fail: Goal = Fail
+    val succeed: Goal = Succceed
+
+    def and(left: Goal, right: Goal): Goal = And(left, right)
     def callFresh(f: Var => Goal): Goal = Goal.fromFunction {
       case State(subst, seqNum) =>
         f(Var(seqNum))(State(subst, seqNum.next))
@@ -45,7 +46,7 @@ trait GoalModule extends StateModule { self =>
     def eq(x: Term, y: Term): Goal = Eq(x, y)
     def fromFunction(f: State => StateStream): Goal = Snooze(FromFunction(f))
     def or(left: Goal, right: Goal): Goal = Or(left, right)
-    def and(left: Goal, right: Goal): Goal = And(left, right)
+    def snooze(goal: Goal): Goal = Snooze(goal)
 
     private case class And(g1: Goal, g2: Goal) extends Goal
     private case class Eq(a: Term, b: Term) extends Goal

@@ -16,4 +16,5 @@ trait UserInterface extends MicroKanrenCore {
     callFresh(q => exists(f(q, _, _, _, _, _, _)))
   def exists(f: (Var, Var, Var, Var, Var, Var, Var, Var) => Goal): Goal =
     callFresh(q => exists(f(q, _, _, _, _, _, _, _)))
+
 }

@@ -7,6 +7,8 @@ trait MicroKanrenCore extends GoalModule { self =>
   def eq(x: Term, y: Term): Goal = Goal.eq(x, y)
   def conj(g1: Goal, g2: Goal): Goal = Goal.and(g1, g2)
   def disj(g1: Goal, g2: Goal): Goal = Goal.or(g1, g2)
+  def goalFail: Goal = Goal.fail
+  def goalSucceed: Goal = Goal.succeed
 
   // def pull(s: ResultStream): LazyList[State] = {
   //   def loop(stream: ResultStream, acc: LazyList[State]): LazyList[State] =

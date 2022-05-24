@@ -4,16 +4,15 @@ val res = callFresh(q => callFresh(u => conj(u === q, q === 42)))(emptyState)
 println(res)
 
 def fives: Goal =
-  callFresh(q =>
-    Goal.fromFunction(s => StateStream.suspend(() => disj(q === 5, fives)(s)))
-  )
+  callFresh(q => Goal.fromFunction(s => disj(q === 5, Goal.snooze(fives))(s)))
 
-fives(emptyState).take(5)
+fives(emptyState).take(10)
 
-def unproductive: Goal = Goal.fromFunction { s =>
+def unproductive: Goal = Goal.snooze(Goal.fromFunction { s =>
   unproductive(s)
-}
-//unproductive(emptyState)
+})
+unproductive(emptyState)
+//unproductive(emptyState).take(1)
 //unproductive(emptyState).toLazyList
 
 def unproductive2: Goal = Goal.fromFunction { s =>
