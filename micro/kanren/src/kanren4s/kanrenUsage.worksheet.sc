@@ -6,13 +6,20 @@ println(res)
 def fives: Goal =
   callFresh(q => Goal.fromFunction(s => disj(q === 5, Goal.snooze(fives))(s)))
 
+def sixes: Goal =
+  callFresh(q => Goal.fromFunction(s => disj(q === 6, Goal.snooze(fives))(s)))
+
+def fivesOrSixes = disj(fives, sixes)
+
+fivesOrSixes(emptyState).take(2)
+
 fives(emptyState).take(10)
 
-def unproductive: Goal = Goal.snooze(Goal.fromFunction { s =>
-  unproductive(s)
-})
+def unproductive: Goal = Goal.fromFunction { s =>
+  disj(Goal.snooze(unproductive), Goal.succeed)(s)
+}
 unproductive(emptyState)
-//unproductive(emptyState).take(1)
+unproductive(emptyState).take(1)
 //unproductive(emptyState).toLazyList
 
 def unproductive2: Goal = Goal.fromFunction { s =>
