@@ -17,4 +17,6 @@ trait UserInterface extends MicroKanrenCore {
   def exists(f: (Var, Var, Var, Var, Var, Var, Var, Var) => Goal): Goal =
     callFresh(q => exists(f(q, _, _, _, _, _, _, _)))
 
+  def snooze(goal: => Goal): Goal = Goal.snooze(goal)
+
 }

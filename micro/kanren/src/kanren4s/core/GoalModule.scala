@@ -42,17 +42,19 @@ trait GoalModule extends StateModule { self =>
       case State(subst, seqNum) =>
         f(Var(seqNum))(State(subst, seqNum.next))
     }
-
     def eq(x: Term, y: Term): Goal = Eq(x, y)
-    def fromFunction(f: State => StateStream): Goal = {
+    def fromFunction(f: State => StateStream): Goal = FromFunction(f)
+
+    def or(left: Goal, right: Goal): Goal = Or(left, right)
+
+    def snooze(goal: Goal): Goal = Snooze(goal)
+
+    def fromInfinite(g: State => StateStream): Goal = {
       def goal: Goal = FromFunction { state =>
         or(snooze(goal), Goal.succeed)(state)
       }
       goal
     }
-    def or(left: Goal, right: Goal): Goal = Or(left, right)
-
-    def snooze(goal: Goal): Goal = Snooze(goal)
 
     private case class And(g1: Goal, g2: Goal) extends Goal
     private case class Eq(a: Term, b: Term) extends Goal
