@@ -11,11 +11,11 @@ def fives: Goal =
   )
 
 def sixes: Goal =
-  callFresh(q => Goal.fromFunction(s => disj(q === 6, snooze(fives))(s)))
+  callFresh(q => Goal.fromFunction(s => disj(q === 6, snooze(sixes))(s)))
 
-def fivesOrSixes = disj(fives, sixes)
+def fivesOrSixes = callFresh( q => disj(fives, sixes))
 
-fivesOrSixes(emptyState).take(2)
+fivesOrSixes(emptyState).take(4)
 
 fives(emptyState).take(10)
 
@@ -33,3 +33,5 @@ def countDown(n: Int): Goal =
   callFresh(q => disj(q === n, snooze(countDown(n - 1))))
 
 countDown(100)(emptyState).take(10)
+
+callInitialState(10, fivesOrSixes)

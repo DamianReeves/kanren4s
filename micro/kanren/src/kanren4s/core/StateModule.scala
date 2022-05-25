@@ -1,5 +1,5 @@
 package kanren4s.core
-
+import scala.annotation.tailrec
 trait StateModule extends SubstitutionModule {
   val emptyState: State = State.empty
 
@@ -40,20 +40,25 @@ trait StateModule extends SubstitutionModule {
       case Mature(head, tail) => Mature(head, tail ++ that)
     }
 
-    def bind(f: State => StateStream): StateStream = self match {
-      case Empty => Empty
-      case Immature(run) =>
-        StateStream.suspend(() => run().bind(f))
-      case Mature(head, tail) => f(head) ++ tail.bind(f)
+    def bind(f: State => StateStream): StateStream = {
+      @tailrec
+      def loop(curr: StateStream, acc: StateStream): StateStream = curr match {
+        case Empty => acc
+        case Immature(run) =>
+          StateStream.suspend(() => run().bind(f))
+        case Mature(head, tail) =>
+          loop(tail, f(head) ++ acc)
+      }
+
+      loop(self, Empty)
     }
 
-    def headOption: Option[State] = self match {
-      case Empty              => None
-      case Immature(run)      => run().headOption
-      case Mature(head, tail) => Some(head)
-    }
+    def cdr: StateStream = peel.map(_._2).getOrElse(Empty)
+
+    def headOption: Option[State] = peel.map(_._1)
 
     def peel: Option[(State, StateStream)] = {
+      @tailrec
       def loop(stream: StateStream): Option[(State, StateStream)] =
         stream match {
           case Empty              => None
@@ -63,9 +68,21 @@ trait StateModule extends SubstitutionModule {
       loop(self)
     }
 
+    def pull: StateStream = {
+      @tailrec
+      def loop(s: StateStream): StateStream =
+        s match {
+          case Immature(run) => loop(run())
+          case stream        => stream
+        }
+
+      loop(self)
+    }
+
     def size: Int = toLazyList.size
 
     def take(n: Int): List[State] = {
+      @tailrec
       def loop(stream: StateStream, n: Int, acc: List[State]): List[State] =
         if (n == 0) acc
         else
@@ -76,6 +93,34 @@ trait StateModule extends SubstitutionModule {
           }
       loop(self, n, Nil)
     }
+
+    def takeAll: List[State] = {
+      @tailrec
+      def loop(stream: StateStream, acc: List[State]): List[State] =
+        stream match {
+          case Empty              => acc
+          case Immature(run)      => loop(run(), acc)
+          case Mature(head, tail) => loop(tail, head :: acc)
+        }
+      loop(self, Nil)
+    }
+
+    // def take(n: Option[Int]): List[State] = {
+    //   @tailrec
+    //   def loop(
+    //       stream: StateStream,
+    //       n: Option[Int],
+    //       acc: List[State]
+    //   ): List[State] =
+    //     if (n == Some(0)) acc
+    //     else
+    //       stream match {
+    //         case Empty              => acc
+    //         case Immature(run)      => loop(run(), n, acc)
+    //         case Mature(head, tail) => loop(tail, n.map(_ - 1), head :: acc)
+    //       }
+    //   loop(self, n, Nil)
+    // }
 
     def toLazyList: LazyList[State] = {
       def loop(stream: StateStream, acc: LazyList[State]): LazyList[State] =
@@ -103,6 +148,7 @@ trait StateModule extends SubstitutionModule {
     val empty: StateStream = Empty
     def append(left: StateStream, right: StateStream): StateStream =
       left ++ right
+    def apply(state: State*): StateStream = state.foldRight(empty)(cons)
     def bind(stream: StateStream, f: State => StateStream): StateStream =
       stream.bind(f)
     def both(a: State, b: State): StateStream = Mature(a, Mature(b, Empty))
@@ -123,5 +169,3 @@ trait StateModule extends SubstitutionModule {
     def seqNumn: SeqNum
   }
 }
-
-

@@ -104,6 +104,46 @@ object MicroKanrenSpec extends DefaultRunnableSpec {
           valueOf(e, subst) == walk(e, subst)
         )
       }
+    ),
+    suite("Stream Ops")(
+      suite("pull")(
+        test(
+          "Should end when callng pull on an immature stream containing an empty stream"
+        ) {
+          val underlying = StateStream.empty
+          val sut = StateStream.suspend(() => underlying)
+          val actual = pull(sut)
+          assertTrue(actual == underlying, actual == sut.pull)
+        },
+        test(
+          "Should end when callng pull on an immature stream containing a mature stream"
+        ) {
+          val underlying = StateStream.single(State.empty)
+          val sut = StateStream.suspend(() => underlying)
+          val actual = pull(sut)
+          assertTrue(actual == underlying, actual == sut.pull)
+        },
+        test(
+          "Should end when callng pull on an immature stream containing a deeply nested empty stream"
+        ) {
+          val underlying = StateStream.empty
+          val sut = StateStream.suspend(() =>
+            StateStream.suspend(() => StateStream.suspend(() => underlying))
+          )
+          val actual = pull(sut)
+          assertTrue(actual == underlying, actual == sut.pull)
+        },
+        test(
+          "Should end when callng pull on an immature stream containing a deeply nested mature stream"
+        ) {
+          val underlying = StateStream.single(State.empty)
+          val sut = StateStream.suspend(() =>
+            StateStream.suspend(() => StateStream.suspend(() => underlying))
+          )
+          val actual = pull(sut)
+          assertTrue(actual == underlying, actual == sut.pull)
+        }
+      )
     )
   )
 }

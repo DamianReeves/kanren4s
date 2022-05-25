@@ -32,15 +32,11 @@ trait StreamModule[Stream[+_]] {
     } else {
       n match {
         case Some(n) if (n - 1) == 0 => List(car(s))
-        case _                       => ??? // cons(ca)
+        case Some(n)                 => ??? // cons(car(s))(take(n - 1, cdr(s)))
+        case _                       => ???
       }
     }
 
   final def takeAll[State](s: Stream[State]): List[State] = take(None, s)
 
-  final def zero_?(n: Int): Boolean = zero_?(Some(n))
-  def zero_?(n: Option[Int]): Boolean = n match {
-    case None    => true
-    case Some(n) => n == 0
-  }
 }

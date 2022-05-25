@@ -2,21 +2,27 @@ import mill._, scalalib._
 import Dependencies._
 
 trait Kanren4sScalaModule extends ScalaModule {
+  def scalaVersion = "2.13.8"
   def scalacOptions = T.task { super.scalacOptions() ++ Seq("-Yrangepos") }
 }
 
 trait Kanren4sZioTestModule extends TestModule {
+  
   def ivyDeps = super.ivyDeps() ++ Agg(dev.zio.`zio-test-sbt`)
   def testFramework = "zio.test.sbt.ZTestFramework"
 }
 
 object micro extends Module {
-  object kanren extends ScalaModule {
-    def scalaVersion = "2.13.8"
+  object kanren extends Kanren4sScalaModule {
+
     def ivyDeps = Agg(com.softwaremill.common.tagging)
-    
+
     object test extends Tests with Kanren4sZioTestModule {
       def ivyDeps = Agg(dev.zio.zio, dev.zio.`zio-test`, dev.zio.`zio-test-sbt`)
+    }
+
+    object examples extends Kanren4sScalaModule {
+      def moduleDeps = Seq(micro.kanren)
     }
   }
 }
